@@ -3,13 +3,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
-from governed_agent import GovernedAgent, InMemoryAuditSink, KnowledgeRecord, ToolRequest
+from governed_agent import (
+    GovernedAgent,
+    InMemoryAuditSink,
+    KnowledgeRecord,
+    ModelOutput,
+    ToolRequest,
+)
 from governed_agent.retrieval import KeywordRetriever
 
 
 class EvaluationModel:
     def complete(self, question, context):
-        return context[0].text
+        return ModelOutput(context[0].text, (context[0].record_id,))
 
 
 agent = GovernedAgent(

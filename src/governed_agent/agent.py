@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import Protocol
 
 from .audit import AuditSink
-from .models import Answer, KnowledgeRecord, ToolDecision, ToolRequest
+from .models import Answer, KnowledgeRecord, ModelOutput, ToolDecision, ToolRequest
 from .policy import ToolPolicy
 from .retrieval import Retriever
 
 
 class LanguageModel(Protocol):
-    def complete(self, question: str, context: tuple[KnowledgeRecord, ...]) -> str: ...
+    def complete(self, question: str, context: tuple[KnowledgeRecord, ...]) -> ModelOutput: ...
 
 
 class GovernedAgent:
@@ -41,10 +41,19 @@ class GovernedAgent:
                 False,
             )
 
-        text = self._model.complete(question, records).strip()
-        citations = tuple(record.record_id for record in records)
+        output = self._model.complete(question, records)
+        available_citations = {record.record_id for record in records}
+        citations = tuple(dict.fromkeys(output.citations))
+        if not output.text.strip() or not citations or not set(citations) <= available_citations:
+            self._audit.emit("answer.refused", actor_id, reason="invalid_model_citations")
+            return Answer(
+                "I cannot provide a grounded answer from the available evidence.",
+                (),
+                False,
+            )
+
         self._audit.emit("answer.completed", actor_id, citations=citations)
-        return Answer(text, citations, True)
+        return Answer(output.text.strip(), citations, True)
 
     def decide_tool(self, request: ToolRequest, actor_id: str = "anonymous") -> ToolDecision:
         decision = self._policy.decide(request)
@@ -53,6 +62,5 @@ class GovernedAgent:
             actor_id,
             tool=request.name,
             outcome=decision.outcome,
-            purpose=request.purpose,
         )
         return decision

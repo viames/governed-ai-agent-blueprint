@@ -1,6 +1,6 @@
 from .agent import GovernedAgent, LanguageModel
 from .audit import AuditEvent, AuditSink, InMemoryAuditSink
-from .models import Answer, KnowledgeRecord, ToolDecision, ToolRequest
+from .models import Answer, KnowledgeRecord, ModelOutput, ToolDecision, ToolRequest
 from .policy import ToolPolicy
 
 __all__ = [
@@ -11,6 +11,7 @@ __all__ = [
     "InMemoryAuditSink",
     "KnowledgeRecord",
     "LanguageModel",
+    "ModelOutput",
     "ToolDecision",
     "ToolPolicy",
     "ToolRequest",

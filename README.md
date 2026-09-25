@@ -45,6 +45,11 @@ The blueprint produces tool decisions; it does **not** execute tools. That
 separation prevents a model-generated request from becoming an external side
 effect without an application-owned authorization step.
 
+The model must return both text and record identifiers. The agent rejects empty
+citations and identifiers that were not present in the retrieved context. This
+checks citation provenance; it does not prove that every natural-language claim
+is entailed by the cited text, which still requires domain-specific evaluation.
+
 ## Quick start
 
 ```sh
@@ -55,13 +60,16 @@ python3 evals/run.py
 Minimal usage:
 
 ```python
-from governed_agent import GovernedAgent, InMemoryAuditSink, KnowledgeRecord
+from governed_agent import GovernedAgent, InMemoryAuditSink, KnowledgeRecord, ModelOutput
 from governed_agent.retrieval import KeywordRetriever
 
 
 class ExampleModel:
-    def complete(self, question: str, context: tuple[KnowledgeRecord, ...]) -> str:
-        return f"The documented recovery target is in {context[0].record_id}."
+    def complete(self, question: str, context: tuple[KnowledgeRecord, ...]) -> ModelOutput:
+        return ModelOutput(
+            "The documented recovery target is four hours.",
+            (context[0].record_id,),
+        )
 
 
 records = (

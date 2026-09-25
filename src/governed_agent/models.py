@@ -23,6 +23,12 @@ class Answer:
 
 
 @dataclass(frozen=True)
+class ModelOutput:
+    text: str
+    citations: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class ToolRequest:
     name: str
     arguments: Mapping[str, object]
