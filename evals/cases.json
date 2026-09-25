@@ -1,0 +1,85 @@
+{
+  "minimum_pass_rate": 1.0,
+  "cases": [
+    {
+      "name": "grounded_continuity_answer",
+      "kind": "answer",
+      "question": "When are backups verified?",
+      "records": [
+        {
+          "record_id": "continuity-1",
+          "text": "Backups are verified every day.",
+          "metadata": {"tenant_id": "acme", "allowed_roles": "operator"}
+        }
+      ],
+      "access": {"actor_id": "operator-1", "tenant_id": "acme", "roles": ["operator"]},
+      "expected_grounded": true,
+      "expected_citations": ["continuity-1"]
+    },
+    {
+      "name": "unsupported_question_refuses",
+      "kind": "answer",
+      "question": "Who approved the annual budget?",
+      "records": [
+        {"record_id": "continuity-1", "text": "Backups are verified every day."}
+      ],
+      "access": {"actor_id": "operator-1", "roles": ["operator"]},
+      "expected_grounded": false,
+      "expected_citations": []
+    },
+    {
+      "name": "cross_tenant_record_refuses",
+      "kind": "answer",
+      "question": "When are backups verified?",
+      "records": [
+        {
+          "record_id": "continuity-1",
+          "text": "Backups are verified every day.",
+          "metadata": {"tenant_id": "tenant-a", "allowed_roles": "operator"}
+        }
+      ],
+      "access": {"actor_id": "operator-2", "tenant_id": "tenant-b", "roles": ["operator"]},
+      "expected_grounded": false,
+      "expected_citations": []
+    },
+    {
+      "name": "missing_role_refuses",
+      "kind": "answer",
+      "question": "When are backups verified?",
+      "records": [
+        {
+          "record_id": "continuity-1",
+          "text": "Backups are verified every day.",
+          "metadata": {"tenant_id": "acme", "allowed_roles": "operator"}
+        }
+      ],
+      "access": {"actor_id": "viewer-1", "tenant_id": "acme", "roles": ["viewer"]},
+      "expected_grounded": false,
+      "expected_citations": []
+    },
+    {
+      "name": "read_only_tool_allowed",
+      "kind": "tool",
+      "tool": "search_knowledge",
+      "expected_outcome": "allow"
+    },
+    {
+      "name": "ticket_requires_approval",
+      "kind": "tool",
+      "tool": "create_ticket",
+      "expected_outcome": "approval_required"
+    },
+    {
+      "name": "shell_tool_denied",
+      "kind": "tool",
+      "tool": "run_shell",
+      "expected_outcome": "deny"
+    },
+    {
+      "name": "unknown_tool_denied",
+      "kind": "tool",
+      "tool": "export_database",
+      "expected_outcome": "deny"
+    }
+  ]
+}

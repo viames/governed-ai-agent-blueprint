@@ -5,6 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from governed_agent import (
+    AccessContext,
     GovernedAgent,
     InMemoryAuditSink,
     KnowledgeRecord,
@@ -47,6 +48,34 @@ class GovernedAgentTests(unittest.TestCase):
         self.assertFalse(answer.grounded)
         self.assertEqual(0, self.model.calls)
         self.assertEqual("answer.refused", self.audit.events[-1].kind)
+
+    def test_tenant_and_role_restrictions_are_applied_before_model_context(self):
+        records = (
+            KnowledgeRecord(
+                "tenant-a-runbook",
+                "Recovery target is four hours for production.",
+                {"tenant_id": "tenant-a", "allowed_roles": "operator,security"},
+            ),
+        )
+        agent = GovernedAgent(self.model, KeywordRetriever(records), self.audit)
+
+        wrong_tenant = agent.answer(
+            "What is the production recovery target?",
+            access=AccessContext("actor-2", "tenant-b", frozenset({"operator"})),
+        )
+        wrong_role = agent.answer(
+            "What is the production recovery target?",
+            access=AccessContext("actor-3", "tenant-a", frozenset({"viewer"})),
+        )
+        allowed = agent.answer(
+            "What is the production recovery target?",
+            access=AccessContext("actor-1", "tenant-a", frozenset({"operator"})),
+        )
+
+        self.assertFalse(wrong_tenant.grounded)
+        self.assertFalse(wrong_role.grounded)
+        self.assertTrue(allowed.grounded)
+        self.assertEqual(1, self.model.calls)
 
     def test_side_effect_requires_approval(self):
         decision = self.agent.decide_tool(

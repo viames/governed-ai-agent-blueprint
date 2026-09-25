@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from .audit import AuditSink
+from .authorization import AccessContext, MetadataAuthorizer, RecordAuthorizer
 from .models import Answer, KnowledgeRecord, ModelOutput, ToolDecision, ToolRequest
 from .policy import ToolPolicy
 from .retrieval import Retriever
@@ -19,22 +20,36 @@ class GovernedAgent:
         retriever: Retriever,
         audit: AuditSink,
         policy: ToolPolicy | None = None,
+        authorizer: RecordAuthorizer | None = None,
     ) -> None:
         self._model = model
         self._retriever = retriever
         self._audit = audit
         self._policy = policy or ToolPolicy()
+        self._authorizer = authorizer or MetadataAuthorizer()
 
-    def answer(self, question: str, actor_id: str = "anonymous") -> Answer:
-        records = self._retriever.search(question)
+    def answer(
+        self,
+        question: str,
+        actor_id: str = "anonymous",
+        access: AccessContext | None = None,
+    ) -> Answer:
+        access = access or AccessContext(actor_id)
+        actor_id = access.actor_id
+        retrieved_records = self._retriever.search(question)
+        records = self._authorizer.filter(retrieved_records, access)
         self._audit.emit(
             "retrieval.completed",
             actor_id,
+            retrieved_count=len(retrieved_records),
             result_count=len(records),
             record_ids=tuple(record.record_id for record in records),
         )
         if not records:
-            self._audit.emit("answer.refused", actor_id, reason="no_relevant_evidence")
+            reason = "no_relevant_evidence"
+            if retrieved_records:
+                reason = "no_authorized_evidence"
+            self._audit.emit("answer.refused", actor_id, reason=reason)
             return Answer(
                 "I cannot answer from the available knowledge base.",
                 (),

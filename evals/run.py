@@ -1,9 +1,16 @@
+from __future__ import annotations
+
+import argparse
+import json
 import sys
+from collections import Counter
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+ROOT = Path(__file__).parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
 from governed_agent import (
+    AccessContext,
     GovernedAgent,
     InMemoryAuditSink,
     KnowledgeRecord,
@@ -18,24 +25,85 @@ class EvaluationModel:
         return ModelOutput(context[0].text, (context[0].record_id,))
 
 
-agent = GovernedAgent(
-    EvaluationModel(),
-    KeywordRetriever((KnowledgeRecord("continuity-1", "Backups are verified every day."),)),
-    InMemoryAuditSink(),
-)
+def evaluate(case):
+    audit = InMemoryAuditSink()
+    if case["kind"] == "answer":
+        records = tuple(
+            KnowledgeRecord(
+                item["record_id"],
+                item["text"],
+                item.get("metadata", {}),
+            )
+            for item in case["records"]
+        )
+        agent = GovernedAgent(EvaluationModel(), KeywordRetriever(records), audit)
+        access_data = case["access"]
+        access = AccessContext(
+            access_data["actor_id"],
+            access_data.get("tenant_id"),
+            frozenset(access_data.get("roles", [])),
+        )
+        answer = agent.answer(case["question"], access=access)
+        actual = {
+            "grounded": answer.grounded,
+            "citations": list(answer.citations),
+        }
+        expected = {
+            "grounded": case["expected_grounded"],
+            "citations": case["expected_citations"],
+        }
+    else:
+        agent = GovernedAgent(EvaluationModel(), KeywordRetriever(()), audit)
+        decision = agent.decide_tool(
+            ToolRequest(case["tool"], {}, "Evaluation case"),
+            "evaluation-actor",
+        )
+        actual = {"outcome": decision.outcome}
+        expected = {"outcome": case["expected_outcome"]}
 
-cases = (
-    ("grounded_answer", agent.answer("When are backups verified?").grounded, True),
-    ("unsupported_refusal", agent.answer("Who approved the budget?").grounded, False),
-    (
-        "mutating_tool_gate",
-        agent.decide_tool(ToolRequest("create_ticket", {}, "Escalate incident")).outcome,
-        "approval_required",
-    ),
-)
+    return {
+        "name": case["name"],
+        "kind": case["kind"],
+        "passed": actual == expected,
+        "actual": actual,
+        "expected": expected,
+    }
 
-failures = [name for name, actual, expected in cases if actual != expected]
-for name, actual, expected in cases:
-    print(f"{'PASS' if actual == expected else 'FAIL'} {name}: {actual!r}")
 
-raise SystemExit(1 if failures else 0)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--json", action="store_true", help="Print machine-readable results")
+    arguments = parser.parse_args()
+
+    configuration = json.loads((ROOT / "evals" / "cases.json").read_text())
+    results = [evaluate(case) for case in configuration["cases"]]
+    passed = sum(result["passed"] for result in results)
+    total = len(results)
+    pass_rate = passed / total if total else 0.0
+    by_kind = Counter(result["kind"] for result in results if result["passed"])
+    totals_by_kind = Counter(result["kind"] for result in results)
+    report = {
+        "passed": passed,
+        "total": total,
+        "pass_rate": pass_rate,
+        "minimum_pass_rate": configuration["minimum_pass_rate"],
+        "metrics": {
+            kind: {"passed": by_kind[kind], "total": count}
+            for kind, count in sorted(totals_by_kind.items())
+        },
+        "results": results,
+    }
+
+    if arguments.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    else:
+        for result in results:
+            state = "PASS" if result["passed"] else "FAIL"
+            print(f"{state} {result['name']}: {result['actual']!r}")
+        print(f"pass_rate={pass_rate:.1%} threshold={configuration['minimum_pass_rate']:.1%}")
+
+    raise SystemExit(0 if pass_rate >= configuration["minimum_pass_rate"] else 1)
+
+
+if __name__ == "__main__":
+    main()

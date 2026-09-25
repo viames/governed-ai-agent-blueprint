@@ -16,10 +16,12 @@ interfaces instead of being hidden inside the agent loop.
 ## What it demonstrates
 
 - Answers grounded in retrieved records with machine-checkable citations
+- Tenant and role authorization before records enter model context
 - Refusal when the knowledge base has no relevant evidence
 - Tool allow, deny and human-approval decisions before execution
+- Persistent, expiring and idempotent approval state backed by SQLite
 - Structured audit events without prompts, secrets or full document content
-- Deterministic tests and evaluation cases independent of a model provider
+- Measurable evaluation thresholds independent of a model provider
 - Dependency inversion through a minimal `LanguageModel` protocol
 
 ## Control flow
@@ -27,14 +29,15 @@ interfaces instead of being hidden inside the agent loop.
 ```mermaid
 flowchart LR
     U[User request] --> R[Retriever]
-    R --> G{Evidence found?}
+    R --> Z[Record authorization]
+    Z --> G{Authorized evidence?}
     G -- No --> F[Grounded refusal]
     G -- Yes --> M[Language model]
     M --> C[Citation validation]
     C --> A[Answer]
     U --> P[Tool policy]
     P --> D[Deny]
-    P --> H[Human approval]
+    P --> H[Persistent human approval]
     P --> T[Allowed tool request]
     R --> E[Audit sink]
     P --> E
@@ -55,6 +58,8 @@ is entailed by the cited text, which still requires domain-specific evaluation.
 ```sh
 python3 -m unittest discover -s tests -v
 python3 evals/run.py
+python3 evals/run.py --json
+python3 examples/incident_assistant.py
 ```
 
 Minimal usage:
@@ -96,20 +101,42 @@ print(answer.citations)
 The default policy denies unknown tools. This is intentional: adding a tool is
 a security decision, not a prompt-engineering detail.
 
+`SQLiteApprovalWorkflow` persists approval requests with an expiration time and
+idempotency key. The requester cannot approve their own action. An approved
+request is consumed before a separate executor performs the side effect; this
+repository deliberately contains no tool executor.
+
 ## Repository layout
 
 ```text
-src/governed_agent/   Agent, retrieval, policy and audit boundaries
+src/governed_agent/   Agent, authorization, approval, policy and audit boundaries
 tests/                Deterministic unit tests
-evals/                Small executable behavior evaluation
+evals/                Dataset, measurable thresholds and executable evaluator
+examples/             Synthetic incident-assistant workflow
+docs/                 Threat model and security boundaries
 ```
+
+## Reference scenario
+
+`examples/incident_assistant.py` models an operations assistant using synthetic
+data. An authorized operator receives a cited runbook answer, proposes a
+high-severity ticket and obtains approval from a different incident manager.
+The approval is persisted and consumed, but no external ticket is created.
+
+## Project status and provenance
+
+The initial implementation was generated with OpenAI Codex on 25 September
+2026 during a GitHub-profile improvement task. It is an AI-assisted reference
+implementation, not a deployed client system or evidence of a completed client
+engagement. The repository is public so its code, limitations and subsequent
+maintainer review remain inspectable.
 
 ## Production integration checklist
 
 Before adapting this blueprint to production:
 
 - authenticate the caller and propagate a stable actor identifier;
-- authorize access to each retrieved record before it enters model context;
+- enforce tenant and record authorization inside the retrieval service itself;
 - replace keyword retrieval with a tenant-aware retrieval service;
 - validate citations against the exact context supplied to the model;
 - keep secrets and sensitive document content out of audit payloads;
@@ -117,6 +144,8 @@ Before adapting this blueprint to production:
 - execute tools in a separate, least-privilege service;
 - add timeouts, rate limits, cost limits and incident telemetry;
 - evaluate refusal, grounding and authorization behavior on domain-specific cases.
+
+Read [the threat model](docs/THREAT_MODEL.md) before adapting any component.
 
 ## Non-goals
 

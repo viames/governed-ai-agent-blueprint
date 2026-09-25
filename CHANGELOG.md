@@ -6,6 +6,18 @@ All notable changes to this project are documented here.
 
 No changes yet.
 
+## 0.3.0 — 2026-09-25
+
+### Added
+
+- Tenant and role authorization before retrieved records enter model context.
+- Persistent SQLite approval workflow with expiration and idempotency.
+- Separation of requester and approver plus one-way approval consumption.
+- Synthetic incident-assistant example with no external side effects.
+- Threat model covering trust boundaries, controls and known limitations.
+- Dataset-backed evaluations with per-category metrics and a CI threshold.
+- Explicit disclosure of the project's AI-assisted provenance.
+
 ## 0.2.0 — 2026-09-25
 
 ### Added

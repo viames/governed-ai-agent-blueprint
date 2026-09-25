@@ -21,3 +21,4 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: python -m unittest discover -s tests -v
       - run: python evals/run.py
+      - run: python examples/incident_assistant.py
