@@ -1,15 +1,23 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "governed-ai-agent-blueprint"
-version = "0.3.0"
+version = "0.3.1"
 description = "Reference architecture for grounded and auditable AI agents"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{name = "Viames Marino"}]
+keywords = ["ai", "agents", "governance", "reference-architecture"]
+
+[project.urls]
+Homepage = "https://github.com/viames/governed-ai-agent-blueprint"
+Repository = "https://github.com/viames/governed-ai-agent-blueprint"
+Issues = "https://github.com/viames/governed-ai-agent-blueprint/issues"
+Changelog = "https://github.com/viames/governed-ai-agent-blueprint/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

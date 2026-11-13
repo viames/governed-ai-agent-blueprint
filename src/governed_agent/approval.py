@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -71,7 +72,8 @@ class SQLiteApprovalWorkflow:
         )
         now = self._as_utc(self._clock())
         approval_id = str(uuid.uuid4())
-        with self._connect() as connection:
+        # SQLite's transaction context commits/rolls back but does not close the connection.
+        with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
             existing = self._find_by_idempotency(connection, idempotency_key)
             if existing:
@@ -110,7 +112,7 @@ class SQLiteApprovalWorkflow:
         if not approver_id.strip():
             raise ValueError("approver_id must not be empty")
         now = self._as_utc(self._clock())
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
             record = self._find(connection, approval_id)
             if record.status == "approved" and record.decided_by == approver_id:
@@ -139,7 +141,7 @@ class SQLiteApprovalWorkflow:
 
     def consume(self, approval_id: str) -> ApprovalRecord:
         now = self._as_utc(self._clock())
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute("BEGIN IMMEDIATE")
             record = self._find(connection, approval_id)
             if record.status == "consumed":
@@ -160,11 +162,11 @@ class SQLiteApprovalWorkflow:
             return self._find(connection, approval_id)
 
     def get(self, approval_id: str) -> ApprovalRecord:
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             return self._find(connection, approval_id)
 
     def _initialize(self) -> None:
-        with self._connect() as connection:
+        with closing(self._connect()) as connection, connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS approvals (

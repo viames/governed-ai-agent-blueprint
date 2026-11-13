@@ -6,6 +6,12 @@ All notable changes to this project are documented here.
 
 No changes yet.
 
+## 0.3.1 — 2026-11-13
+
+- Close SQLite approval connections after transaction completion, including error paths.
+- Add Python package discovery metadata and a release-tag-bound PyPI trusted-publishing workflow.
+- Keep the reference implementation's scope and AI-assisted provenance explicit.
+
 ## 0.3.0 — 2026-09-25
 
 ### Added
