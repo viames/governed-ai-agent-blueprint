@@ -6,6 +6,12 @@ All notable changes to this project are documented here.
 
 No changes yet.
 
+## 0.3.2 — 2026-11-13
+
+- Refresh PyPI project metadata and README with the cover image, clearer description and direct GitHub links.
+- Use absolute documentation links for package-index rendering.
+- Reference implementation and runtime behavior are unchanged.
+
 ## 0.3.1 — 2026-11-13
 
 - Close SQLite approval connections after transaction completion, including error paths.

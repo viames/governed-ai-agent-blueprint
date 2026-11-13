@@ -2,13 +2,13 @@
 
 # Governed AI Agent Blueprint
 
-[Install and try](#quick-start) · [Control flow](#control-flow) · [Boundaries](#non-goals) · [PyPI](https://pypi.org/project/governed-ai-agent-blueprint/)
+[Install and try](#quick-start) · [Control flow](#control-flow) · [Boundaries](#non-goals) · [PyPI](https://pypi.org/project/governed-ai-agent-blueprint/) · [GitHub repository](https://github.com/viames/governed-ai-agent-blueprint)
 
 **A small, executable reference architecture for grounded and auditable AI agents.**
 
 [![CI](https://github.com/viames/governed-ai-agent-blueprint/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/viames/governed-ai-agent-blueprint/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/governed-ai-agent-blueprint)](https://pypi.org/project/governed-ai-agent-blueprint/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/viames/governed-ai-agent-blueprint/blob/main/LICENSE)
 
 This repository demonstrates the control boundaries an AI workflow should have
 before it reaches production. It keeps model generation separate from retrieval,
@@ -166,7 +166,7 @@ Before adapting this blueprint to production:
 - add timeouts, rate limits, cost limits and incident telemetry;
 - evaluate refusal, grounding and authorization behavior on domain-specific cases.
 
-Read [the threat model](docs/THREAT_MODEL.md) before adapting any component.
+Read [the threat model](https://github.com/viames/governed-ai-agent-blueprint/blob/main/docs/THREAT_MODEL.md) before adapting any component.
 
 ## Non-goals
 
@@ -176,7 +176,7 @@ example of where responsibility should live in a governed system.
 
 ## Security
 
-Please report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Please report vulnerabilities privately as described in [SECURITY.md](https://github.com/viames/governed-ai-agent-blueprint/blob/main/SECURITY.md).
 
 ## License
 

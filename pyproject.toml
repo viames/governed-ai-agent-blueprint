@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "governed-ai-agent-blueprint"
-version = "0.3.1"
-description = "Reference architecture for grounded and auditable AI agents"
+version = "0.3.2"
+description = "Executable Python reference for AI workflows with access checks, human approval and audit trails. AI-assisted, standard library only."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
