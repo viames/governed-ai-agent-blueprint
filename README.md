@@ -7,6 +7,7 @@
 **A small, executable reference architecture for grounded and auditable AI agents.**
 
 [![CI](https://github.com/viames/governed-ai-agent-blueprint/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/viames/governed-ai-agent-blueprint/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/governed-ai-agent-blueprint)](https://pypi.org/project/governed-ai-agent-blueprint/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 This repository demonstrates the control boundaries an AI workflow should have
