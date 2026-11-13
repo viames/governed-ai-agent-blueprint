@@ -1,4 +1,8 @@
+![Governed AI Blueprint — Policy. Approval. Audit.](https://raw.githubusercontent.com/viames/governed-ai-agent-blueprint/main/.github/assets/cover.jpg)
+
 # Governed AI Agent Blueprint
+
+[Install and try](#quick-start) · [Control flow](#control-flow) · [Boundaries](#non-goals) · [PyPI](https://pypi.org/project/governed-ai-agent-blueprint/)
 
 **A small, executable reference architecture for grounded and auditable AI agents.**
 
