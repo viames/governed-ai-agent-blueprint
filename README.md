@@ -55,12 +55,28 @@ is entailed by the cited text, which still requires domain-specific evaluation.
 
 ## Quick start
 
+Install the package from [PyPI](https://pypi.org/project/governed-ai-agent-blueprint/)
+with Python 3.9 or later:
+
+```sh
+python3 -m pip install governed-ai-agent-blueprint
+```
+
+The import package is `governed_agent`. To run the repository's tests,
+evaluations and example, clone this repository and install it with
+`python3 -m pip install -e .`, then run:
+
 ```sh
 python3 -m unittest discover -s tests -v
 python3 evals/run.py
 python3 evals/run.py --json
 python3 examples/incident_assistant.py
 ```
+
+Releases use the tag-bound `publish-pypi.yml` GitHub Actions workflow and the
+`pypi` environment with PyPI Trusted Publishing. The workflow tests and builds
+the tagged source before publishing with a short-lived identity token. GitHub
+release assets and checksums match the artifacts published to PyPI.
 
 Minimal usage:
 
